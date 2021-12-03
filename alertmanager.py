@@ -9,9 +9,9 @@ from threading import Timer
 
 host = ('localhost', 8888)
 
-alertmanager_api_url = 'https://alertmanager.qiyuesuo.com/api/v2/alerts'
+alertmanager_api_url = 'http://127.0.0.1:9093/api/v2/alerts'
 
-db = MySQLdb.connect("127.0.0.1", "root", "rootroot", "alertmanager", charset='utf8')
+db = MySQLdb.connect("127.0.0.1", "alertmanager", "alertmanager", "alertmanager", charset='utf8')
 def sqlSelect(sql, db):
         #include:select
         cr = db.cursor()
