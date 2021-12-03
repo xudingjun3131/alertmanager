@@ -105,8 +105,8 @@ class Resquest(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')  #处理头部为json格式
         # self.send_header('Content-type', 'text/html; charset=utf-8')  #处理数据为text格式
         self.end_headers()
-        # self.wfile.write(json.dumps(data1).encode()) 返回json格式数据
-        self.wfile.write(str(data).encode()) #返回text格式数据
+        self.wfile.write(json.dumps(data1).encode()) #返回json格式数据
+        # self.wfile.write(str(data).encode()) #返回text格式数据
 
 
 def curl_localhost():
