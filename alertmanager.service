@@ -1,0 +1,13 @@
+#Prometheus Alertmanager Exporter Upstart script
+
+[Unit]
+Description=Alert Manager DB
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+ExecStart=/env/alertmanager/bin/python /home/prometheus/scripts/alertmanager.py
+
+[Install]
+WantedBy=default.target
