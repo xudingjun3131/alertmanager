@@ -19,6 +19,8 @@ mysql 5.7<br/>
 **操作步骤：**<br/>
 - 安装mysql，执行alertmanager.sql
 - pip install -r requirements.txt
+- 修改alertmanager.service里面的python路径和py文件路径，然后执行下面的命令启动服务
+- cp alertmanager.service /usr/lib/systemd/system && systemctl daemon-reload  && systemctl enable alertmanager && systemctl start alertmanager
 - 导入alertmanger-grafana,json到grafana看板即可
 
 **最后grafana效果如下：**<br/>
