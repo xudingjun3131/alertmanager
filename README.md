@@ -18,7 +18,8 @@ mysql 5.7<br/>
 
 **操作步骤：**<br/>
 - 安装mysql，执行alertmanager.sql
-- python3安装完mysqlclient后，执行命令  `nohup python3 alertmanager.py &`
+- pip install -r requirements.txt
+- 导入alertmanger-grafana,json到grafana看板即可
 
-最后grafana效果如下
-![](https://s3.bmp.ovh/imgs/2021/12/b8ab8e29192fb519.png)
+**最后grafana效果如下：**<br/>
+![](https://s3.bmp.ovh/imgs/2022/01/8b98e9c7b421d007.png)
