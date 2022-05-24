@@ -13,7 +13,7 @@ from threading import Timer
 
 host = ('localhost', 8888)
 
-alertmanager_api_url_list = ['https://alertmanager.xxxx.com/api/v2/alerts', 'https://alertmanager2.xxxx.com/api/v2/alerts']
+alertmanager_api_url_list = ['https://alertmanager.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-cn.qiyuesuo.cn/api/v2/alerts', 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts']
 
 class DbManager(object):
     def __init__(self, host, port, db_name, user_name, password):
@@ -77,6 +77,7 @@ class Resquest(BaseHTTPRequestHandler):
     def do_GET(self):
         endtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for alertmanager_api_url in alertmanager_api_url_list:
+            old_list_bb = Resquest.alert_old_list(url=alertmanager_api_url)
             alert_new_list = []
             req = requests.get(url=alertmanager_api_url)
             data = json.loads(req.text)
@@ -102,12 +103,12 @@ class Resquest(BaseHTTPRequestHandler):
                     if receivers == "Watchdog":
                         continue
                     else:
-                        if bb not in Resquest.alert_old_list(url=alertmanager_api_url):
+                        if bb not in old_list_bb:
                             sql_arg = (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels)
                             insert_sql = "INSERT INTO alertmanager (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels) VALUES " + str(sql_arg) +";"
                             sqlDMl(insert_sql, db)
             ##### 修正恢复时间
-            resolved_list = list(set(Resquest.alert_old_list(url=alertmanager_api_url)).difference(set(alert_new_list)))
+            resolved_list = list(set(old_list_bb).difference(set(alert_new_list)))
             if len(resolved_list) > 0:
                 for bb in resolved_list:
                     startsAt = bb[0:19]
@@ -167,4 +168,3 @@ if __name__ == '__main__':
     p1.join()
     p2.join()
 #    p2.terminate()
-
