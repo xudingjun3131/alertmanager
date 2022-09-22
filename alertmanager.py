@@ -1,19 +1,19 @@
 # coding: utf-8
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import json
-import urllib3
+import json, time, datetime, urllib3, requests, MySQLdb, MySQLdb.cursors
 from time import sleep
-import time, datetime
-import requests
-import MySQLdb
-import MySQLdb.cursors
 from dbutils.pooled_db import PooledDB
 from multiprocessing import Process, Queue, Value, Array
 from threading import Timer
 
+# 启动服务
 host = ('localhost', 8888)
 
+<<<<<<< HEAD
+alertmanager_api_url_list = ['https://alertmanager.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-com.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-cn.qiyuesuo.cn/api/v2/alerts', 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts']
+=======
 alertmanager_api_url_list = ['https://alertmanager.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-cn.qiyuesuo.cn/api/v2/alerts', 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts']
+>>>>>>> 8565cf4f958f5243b172239ba77a50763954c1b2
 
 class DbManager(object):
     def __init__(self, host, port, db_name, user_name, password):
@@ -70,29 +70,65 @@ def query_old_alert(url):
         alert_old_list.append(unit_fs)
     return alert_old_list
 
+def query_uniq_alert(ss, fp, url):
+    fingerprint_sql = "select count(fingerprint) as cc from alertmanager where startsAt='%s' and fingerprint='%s' and alertmanager_api_url='%s';" %(ss,fp,url)
+    rs = sqlSelect(fingerprint_sql, db)
+    if rs[0]['cc'] > 0:
+        ifuniq = True
+    else:
+        ifuniq = False
+    return ifuniq
+
 class Resquest(BaseHTTPRequestHandler):
     def alert_old_list(url):
         old_alert = query_old_alert(url)
         return old_alert
+
+    def alert_uniq_result(ss, fp, url):
+        result = query_uniq_alert(ss, fp, url)
+        return result
+
     def do_GET(self):
+        # logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         endtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for alertmanager_api_url in alertmanager_api_url_list:
             old_list_bb = Resquest.alert_old_list(url=alertmanager_api_url)
             alert_new_list = []
+            old_list_bb = Resquest.alert_old_list(url=alertmanager_api_url)
             req = requests.get(url=alertmanager_api_url)
             data = json.loads(req.text)
             if len(data) > 0:
                 for i in range(len(data)):
                     metrics_data = data[i]
-                    description = metrics_data['annotations'].get('description', '')
-                    summary = metrics_data['annotations'].get('summary', '')
-                    valuess = metrics_data['annotations'].get('value', '')
-                    fingerprint = metrics_data['fingerprint']
-                    startsAt = metrics_data['startsAt'].replace('T', ' ').replace('Z', ' ')[0:19]
-                    startsAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(startsAt,"%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
-                    endsAt = metrics_data['endsAt'].replace('T', ' ').replace('Z', ' ')[0:19]
-                    endsAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(endsAt,"%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
                     receivers = metrics_data['receivers'][0]['name']
+<<<<<<< HEAD
+                    if receivers != "Watchdog":
+                        if metrics_data['status']['state'] == 'active':
+                            description = metrics_data['annotations'].get('description', '')
+                            summary = metrics_data['annotations'].get('summary', '')
+                            valuess = metrics_data['annotations'].get('value', '')
+                            fingerprint = metrics_data['fingerprint']
+                            startsAt = metrics_data['startsAt'].replace('T', ' ').replace('Z', ' ')[0:19]
+                            startsAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(startsAt,"%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+                            endsAt = metrics_data['endsAt'].replace('T', ' ').replace('Z', ' ')[0:19]
+                            endsAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(endsAt,"%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+                            statusss = json.dumps(metrics_data['status'])
+                            updatedAt = metrics_data['updatedAt'].replace('T', ' ').replace('Z', ' ')[0:19]
+                            updatedAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(updatedAt, "%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+                            generatorURL = metrics_data['generatorURL']
+                            labels = json.dumps(metrics_data['labels'])
+                            bb = str(startsAt) + str(fingerprint)
+                            alert_new_list.append(bb)
+                            ifuniq = Resquest.alert_uniq_result(ss=startsAt, fp=fingerprint, url=alertmanager_api_url)
+                            if ifuniq == False:
+                                sql_arg = (
+                                alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt,
+                                receivers, updatedAt, statusss, generatorURL, labels)
+                                insert_sql = "INSERT INTO alertmanager (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels) VALUES " + str(sql_arg) + ";"
+                                sqlDMl(insert_sql, db)
+                            else:
+                                continue
+=======
                     statusss = json.dumps(metrics_data['status'])
                     updatedAt = metrics_data['updatedAt'].replace('T', ' ').replace('Z', ' ')[0:19]
                     updatedAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(updatedAt, "%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
@@ -107,6 +143,7 @@ class Resquest(BaseHTTPRequestHandler):
                             sql_arg = (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels)
                             insert_sql = "INSERT INTO alertmanager (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels) VALUES " + str(sql_arg) +";"
                             sqlDMl(insert_sql, db)
+>>>>>>> 8565cf4f958f5243b172239ba77a50763954c1b2
             ##### 修正恢复时间
             resolved_list = list(set(old_list_bb).difference(set(alert_new_list)))
             if len(resolved_list) > 0:
@@ -118,7 +155,10 @@ class Resquest(BaseHTTPRequestHandler):
                     sqlDMl(update_sql, db)
             #Resquest.alert_old_list = alert_new_list
             rsp_code = req.status_code
-            self.send_response(rsp_code)
+            # self.send_response(rsp_code)
+            # self.send_error(rsp_code)
+            self.send_response_only(rsp_code)
+            # self.log_error()
             self.send_header('Content-type', 'application/json')  #处理头部为json格式
             # self.send_header('Connection', 'keep-alive')
             # self.send_header('Content-type', 'text/html; charset=utf-8')  #处理数据为text格式
@@ -135,7 +175,7 @@ def long_conn_localhost():
 
 # 改用urllib3的长连接
 def long_conn_urllib3_localhost():
-    http = urllib3.PoolManager(num_pools=100, headers={'Connection':'keep-alive'}, maxsize=100, block=True)
+    http = urllib3.PoolManager(num_pools=100, headers={'Connection': 'keep-alive'}, maxsize=100, block=True)
     while True:
       http.request('GET', 'http://127.0.0.1:8888')
       sleep(1)
@@ -167,4 +207,8 @@ if __name__ == '__main__':
     p2.start()
     p1.join()
     p2.join()
+<<<<<<< HEAD
 #    p2.terminate()
+=======
+#    p2.terminate()
+>>>>>>> 8565cf4f958f5243b172239ba77a50763954c1b2
