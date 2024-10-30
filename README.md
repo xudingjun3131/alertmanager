@@ -26,5 +26,5 @@ mysql 5.7<br/>
 
 **最后grafana效果如下：**<br/>
 <p align="center">
-<img src="/dashboard.jpg"  width=1024 />
+<img src="/dashboard.png"  width=1024 />
 </p>
