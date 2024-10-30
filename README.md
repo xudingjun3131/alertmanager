@@ -25,4 +25,6 @@ mysql 5.7<br/>
 - 导入alertmanger-grafana,json到grafana看板即可
 
 **最后grafana效果如下：**<br/>
-![](https://s3.bmp.ovh/imgs/2022/01/8b98e9c7b421d007.png)
+<p align="center">
+<img src="/dashboard.jpg"  width=1024 />
+</p>
