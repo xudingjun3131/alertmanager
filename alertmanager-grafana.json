@@ -1,9 +1,55 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_MYSQL-LOCALHOST",
+      "label": "MySQL-LOCALHOST",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "__elements": [],
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "briangann-datatable-panel",
+      "name": "Datatable Panel",
+      "version": "1.0.4"
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph (old)",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "mysql",
+      "name": "MySQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -21,15 +67,18 @@
   "description": "从数据库中查询告警数据",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "gnetId": null,
   "graphTooltip": 0,
-  "id": 35,
+  "id": null,
+  "iteration": 1730269774258,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "h2rtSbDnz"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -42,7 +91,10 @@
       "type": "row"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -74,7 +126,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 8,
         "w": 2,
         "x": 0,
         "y": 1
@@ -95,14 +147,18 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\nORDER BY startsAt",
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env = '$ENV'\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -130,12 +186,22 @@
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "华为云RDS",
+              "url": "https://grafana.qiyuesuo.com/d/6VONepp7zasc323/hua-wei-yun-rds?orgId=1&refresh=1m"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -162,16 +228,23 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 2,
+        "h": 8,
+        "w": 3,
         "x": 2,
         "y": 1
       },
-      "id": 17,
+      "id": 11,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "华为云RDS",
+          "url": "https://grafana.qiyuesuo.com/d/6VONepp7zasc323/hua-wei-yun-rds?orgId=1&refresh=1m"
+        }
+      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -180,17 +253,55 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "titleSize": 15,
+          "valueSize": 30
+        },
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"慢查询\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库慢查询\"\r\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%Too Many Nginx Writing%')\nORDER BY startsAt",
+          "rawSql": "SELECT\n  count(fingerprint) as \"连接数高\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"数据库连接数高\"\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -212,18 +323,214 @@
               "type": "macro"
             }
           ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"行锁\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库行锁\"\r\nORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"内存高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库内存高\"\r\nORDER BY startsAt",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"CPU高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库CPU高\"\r\nORDER BY startsAt",
+          "refId": "E",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"磁盘高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库磁盘高\"\r\nORDER BY startsAt",
+          "refId": "F",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"从库\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库从库\"\r\nORDER BY startsAt",
+          "refId": "G",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"宕机\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"数据库宕机\"\r\nORDER BY startsAt",
+          "refId": "H",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
         }
       ],
-      "title": "Nginx(慢) 总数",
+      "title": "数据库告警",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "华为云Redis",
+              "url": "https://grafana.qiyuesuo.com/d/6VONepp7zasvq3er12/hua-wei-yun-redis?orgId=1&refresh=30s"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -250,16 +557,228 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 8,
         "w": 2,
-        "x": 4,
+        "x": 5,
+        "y": 1
+      },
+      "id": 29,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "华为云REDIS",
+          "url": "https://grafana.qiyuesuo.com/d/6VONepp7zasvq3er12/hua-wei-yun-redis?orgId=1&refresh=30s"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "titleSize": 15,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"超流控\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"Redis超流控\"\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) \"带宽高\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"Redis带宽高\"\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"CPU高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"RedisCPU高\"\r\nORDER BY startsAt",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"内存高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"Redis内存高\"\r\nORDER BY startsAt",
+          "refId": "E",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Redis告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Nginx看板",
+              "url": "https://grafana.qiyuesuo.com/d/yaWGiCD7k/nginxkan-ban?orgId=1&refresh=30s"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 2,
+        "x": 7,
         "y": 1
       },
       "id": 16,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Nginx看板",
+          "url": "https://grafana.qiyuesuo.com/d/R8KO87onk/yu-ming-zhuang-tai-ma-kan-ban?orgId=1&refresh=30s"
+        }
+      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -268,17 +787,55 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "titleSize": 18,
+          "valueSize": 30
+        },
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"慢\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"nginx慢\"\nORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%Nginx Http Total Code 5xx Too Many%' or labels like '%NginxHighHttp5xxErrorRate%' or labels like '%Nginx Http Code 5XX Upstream Too Many%' or labels like '%Nginx Http Code 5XX Backend Too Many%' or labels like '%Nginx_Domain_5XX_Too_Many%')\nORDER BY startsAt",
+          "rawSql": "SELECT\n  count(fingerprint) as \"【5XX】\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"nginx5xx\"\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -300,18 +857,59 @@
               "type": "macro"
             }
           ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"【4XX】\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"nginx4xx\"\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
         }
       ],
-      "title": "Nginx(5XX)高 总数",
+      "title": "Nginx告警",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "JVM看板",
+              "url": "https://grafana.qiyuesuo.com/d/cloud-jvm-dashboardcom/2-jvm-for-gong-you-yun-com?orgId=1"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -338,456 +936,23 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 8,
         "w": 2,
-        "x": 6,
-        "y": 1
-      },
-      "id": 15,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%NginxHighHttp4xxErrorRate%' or labels like '%NginxHighHttp4xxErrorCounts%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "Nginx(4XX)高 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 8,
-        "y": 1
-      },
-      "id": 8,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%Blackbox%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "URL故障 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 10,
-        "y": 1
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%MysqlTooManyConnections(>80%)%' or labels like '%JDBCPool connections too large%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "数据库连接数高 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 12,
-        "y": 1
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%MysqlSlowQueries%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "数据库慢查询 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 14,
-        "y": 1
-      },
-      "id": 13,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%带宽使用率超过%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "带宽高 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 16,
+        "x": 9,
         "y": 1
       },
       "id": 12,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "JVM看板",
+          "url": "https://grafana.qiyuesuo.com/d/cloud-jvm-dashboardcom/2-jvm-for-gong-you-yun-com?orgId=1"
+        }
+      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -796,17 +961,1162 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "titleSize": 15,
+          "valueSize": 30
+        },
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%old gc%' or labels like '%GC time too long%' or labels like '%FGC counts too many%' or labels like '%heap space usage%')\nORDER BY startsAt",
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"内存高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"java内存高\"\r\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"FGC\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"javaFGC\"\r\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"连接高/等待\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"java连接高/等待\"\nORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"服务宕机\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"java服务宕机\"\nORDER BY startsAt",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "JVM告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "应用服务告警数量看板",
+              "url": "https://grafana.qiyuesuo.com/d/cloud-jvm-dashboardcom/2-jvm-for-gong-you-yun-com?orgId=1"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 2,
+        "x": 11,
+        "y": 1
+      },
+      "id": 40,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "应用告警数量看板",
+          "url": "https://grafana.qiyuesuo.com/d/cloud-jvm-dashboardcom/2-jvm-for-gong-you-yun-com?orgId=1"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "titleSize": 20,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"CPU高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"应用CPU高\"\r\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"内存高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"应用内存高\"\r\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"线程忙\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"应用线程忙\"\nORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "应用告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "RabbitMQ看板",
+              "url": "https://grafana.qiyuesuo.com/d/AYppGeD7k/rabbitmq-metrics?orgId=1&refresh=30s&var-datasource=Prometheus&var-env=com&var-qys_area=A&var-instance=192.168.17.247:9419"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 2,
+        "x": 13,
+        "y": 1
+      },
+      "id": 28,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "RabbitMQ看板",
+          "url": "https://grafana.qiyuesuo.com/d/AYppGeD7k/rabbitmq-metrics?orgId=1&refresh=30s&var-datasource=Prometheus&var-env=com&var-qys_area=A&var-instance=192.168.17.247:9419"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "titleSize": 15,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"非delay队列\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"MQ非delay队列\"\r\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"delay队列\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"MQdelay队列\"\r\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"MQ宕机\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"MQ宕机\"\r\n  ORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"内存高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"MQ内存高\"\r\nORDER BY startsAt",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"连接数高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"MQ连接数高\"\r\nORDER BY startsAt",
+          "refId": "E",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"磁盘\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"MQ磁盘高\"\r\nORDER BY startsAt",
+          "refId": "F",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "RabbitMQ 告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "探针看板",
+              "url": "https://grafana.qiyuesuo.com/d/ynUxXflik/wang-luo-ji-ssljian-kong?orgId=1&refresh=10s"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 2,
+        "x": 15,
+        "y": 1
+      },
+      "id": 8,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "探针看板",
+          "url": "https://grafana.qiyuesuo.com/d/ynUxXflik/wang-luo-ji-ssljian-kong?orgId=1&refresh=10s"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "titleSize": 15,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"URL慢\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"URL慢\"\r\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"URL故障\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"URL故障\"\r\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"SSL证书\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"URLSSL证书\"\r\nORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "探针告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "ZK看板",
+              "url": "https://grafana.qiyuesuo.com/d/nKtIC5Yik/zookeerper-overview?orgId=1&refresh=10s"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 2,
+        "x": 17,
+        "y": 1
+      },
+      "id": 13,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "ZK看板",
+          "url": "https://grafana.qiyuesuo.com/d/nKtIC5Yik/zookeerper-overview?orgId=1&refresh=10s"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "titleSize": 18,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"宕机\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"ZK宕机\"\r\nORDER BY startsAt",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"Leader异常\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"ZKLeader异常\"\r\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"ZK慢\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"ZK慢\"\r\n  ORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Zookeeper告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "OBS看板",
+              "url": "https://grafana.qiyuesuo.com/d/6VONepp7z23r23ac/hua-wei-yun-obs?orgId=1&refresh=30s"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 2,
+        "x": 19,
+        "y": 1
+      },
+      "id": 43,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "OBS看板",
+          "url": "https://grafana.qiyuesuo.com/d/6VONepp7z23r23ac/hua-wei-yun-obs?orgId=1&refresh=30s"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "titleSize": 20,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"成功率\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"OBS成功率\"\r\nORDER BY startsAt ",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "count(*)"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alertmanager",
+          "timeColumn": "startsAt",
+          "timeColumnType": "datetime",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"延迟高\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"OBS延迟高\"\r\nORDER BY startsAt",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "OBS告警",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "displayName": "ES",
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "ES看板",
+              "url": "https://grafana.qiyuesuo.com/d/GrFCZl_4z/elasticsearch?orgId=1&refresh=1m&var-env=com&var-cluster=elasticsearch&var-node=All&var-interval=$__auto_interval_interval"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-purple",
+                "value": 5
+              },
+              {
+                "color": "dark-red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 2,
+        "x": 21,
+        "y": 1
+      },
+      "id": 41,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "ES看板",
+          "url": "https://grafana.qiyuesuo.com/d/GrFCZl_4z/elasticsearch?orgId=1&refresh=1m&var-env=com&var-cluster=elasticsearch&var-node=All&var-interval=$__auto_interval_interval"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "vertical",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "text": {
+          "titleSize": 20,
+          "valueSize": 30
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint) as \"ES\"\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"ES\"\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -830,11 +2140,14 @@
           ]
         }
       ],
-      "title": "GC高 总数",
+      "title": "ES告警",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -867,8 +2180,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 18,
+        "w": 1,
+        "x": 23,
         "y": 1
       },
       "id": 14,
@@ -887,14 +2200,18 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%磁盘使用率过高%' or labels like '%分区容量过低%' or labels like '%HostOutOfDiskSpace%')\nORDER BY startsAt",
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"K8S相关告警\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"K8S\"\r\n  ORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -918,16 +2235,26 @@
           ]
         }
       ],
-      "title": "磁盘高 总数",
+      "title": "K8S告警",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "ELB看板",
+              "url": "https://grafana.qiyuesuo.com/d/6VONepp7z/hua-wei-yun-elb?orgId=1&refresh=30s&var-ELB=%E5%85%AC%E6%9C%89%E4%BA%91com-waf"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -956,14 +2283,21 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 0,
+        "x": 19,
         "y": 5
       },
-      "id": 7,
+      "id": 45,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "ELB看板",
+          "url": "https://grafana.qiyuesuo.com/d/6VONepp7z/hua-wei-yun-elb?orgId=1&refresh=30s&var-ELB=%E5%85%AC%E6%9C%89%E4%BA%91com-waf"
+        }
+      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -972,17 +2306,24 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "titleSize": 20,
+          "valueSize": 30
+        },
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%PrometheusJobMissing%' or labels like '%Instance-Down%' or labels like '%jvm down%' or labels like '%MysqlDown%' or labels like '%ZookeeperDown%')\nORDER BY startsAt",
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"成功率\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"ELB\"\r\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -1006,16 +2347,27 @@
           ]
         }
       ],
-      "title": "实例Down总数",
+      "title": "ELB告警",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "displayName": "Kafka",
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "kafka看板",
+              "url": "https://grafana.qiyuesuo.com/d/jwPKIsniz/kafka-exporter-overview?orgId=1&var-job=kafka&var-env=com&var-instance=192.168.17.247:9308&var-topic=All"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1044,14 +2396,21 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 2,
+        "x": 21,
         "y": 5
       },
-      "id": 24,
+      "id": 42,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "kafka看板",
+          "url": "https://grafana.qiyuesuo.com/d/jwPKIsniz/kafka-exporter-overview?orgId=1&var-job=kafka&var-env=com&var-instance=192.168.17.247:9308&var-topic=All"
+        }
+      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -1060,17 +2419,24 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "titleSize": 20,
+          "valueSize": 29
+        },
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%HostHighCpuLoad%' or labels like '%CPU使用率过高%')\nORDER BY startsAt",
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and env='$ENV'  \n  and category = \"KAFKA\"\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -1094,16 +2460,26 @@
           ]
         }
       ],
-      "title": "CPU高 总数",
+      "title": "Kafka告警",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "K8S",
+              "url": "https://grafana.qiyuesuo.com/d/P0ccucKSz/hua-wei-yun-zi-yuan-kan-ban?orgId=1&refresh=5s"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1131,11 +2507,18 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 4,
+        "w": 1,
+        "x": 23,
         "y": 5
       },
-      "id": 9,
+      "id": 44,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "K8S",
+          "url": "https://grafana.qiyuesuo.com/d/P0ccucKSz/hua-wei-yun-zi-yuan-kan-ban?orgId=1&refresh=5s"
+        }
+      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -1151,14 +2534,18 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%内存使用率过高%')\nORDER BY startsAt",
+          "rawSql": "SELECT\r\n  count(fingerprint) as \"K8S相关告警\"\r\nFROM alertmanager\r\nWHERE\r\n  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \r\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\r\n  and env='$ENV'  \r\n  and category = \"其他\"\r\nORDER BY startsAt",
           "refId": "A",
           "select": [
             [
@@ -1182,778 +2569,150 @@
           ]
         }
       ],
-      "title": "内存高 总数",
+      "title": "其他",
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 6,
-        "y": 5
-      },
-      "id": 28,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
+      "alignNumbersToRightEnabled": true,
+      "columnAliases": [],
+      "columnFiltersEnabled": false,
+      "columnWidthHints": [
         {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%消息堆积%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
+          "$$hashKey": "object:119",
+          "name": "告警开始时间",
+          "width": "90px"
+        },
+        {
+          "$$hashKey": "object:121",
+          "name": "告警结束时间",
+          "width": "90px"
+        },
+        {
+          "$$hashKey": "object:123",
+          "name": "告警级别",
+          "width": "60px"
+        },
+        {
+          "$$hashKey": "object:125",
+          "name": "告警状态",
+          "width": "60px"
         }
       ],
-      "title": "MQ高 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
+      "columns": [],
+      "compactRowsEnabled": false,
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
       },
+      "datatablePagingType": "simple_numbers",
+      "datatableTheme": "basic_theme",
+      "emptyData": false,
+      "fontSize": "100%",
       "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 8,
-        "y": 5
-      },
-      "id": 31,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%SNAT连接数使用率%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "NAT连接数 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 10,
-        "y": 5
-      },
-      "id": 36,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%公有云服务%DOWN%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "探活Down 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 12,
-        "y": 5
-      },
-      "id": 27,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%Redis 带宽使用率%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "REDIS带宽高 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 14,
-        "y": 5
-      },
-      "id": 29,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  and (labels like '%Redis 流控次数超过10次%')\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "REDIS流控 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              },
-              {
-                "color": "semi-dark-purple",
-                "value": 5
-              },
-              {
-                "color": "dark-red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 2,
-        "x": 16,
-        "y": 5
-      },
-      "id": 30,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.0",
-      "targets": [
-        {
-          "format": "table",
-          "group": [],
-          "metricColumn": "none",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.state\") = \"active\"\n  and labels not like '%测试环境%'\n  and (labels like '%Redis 慢查询%')\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\nORDER BY startsAt",
-          "refId": "A",
-          "select": [
-            [
-              {
-                "params": [
-                  "count(*)"
-                ],
-                "type": "column"
-              }
-            ]
-          ],
-          "table": "alertmanager",
-          "timeColumn": "startsAt",
-          "timeColumnType": "datetime",
-          "where": [
-            {
-              "name": "$__timeFilter",
-              "params": [],
-              "type": "macro"
-            }
-          ]
-        }
-      ],
-      "title": "REDIS慢查询 总数",
-      "type": "stat"
-    },
-    {
-      "datasource": "MySQL-LOCALHOST",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "null"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 153
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "valuess"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 112
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "etime"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 157
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "utime"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 167
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "status"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 109
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "labels"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 533
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "stime"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 163
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "description"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 468
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "URL"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 383
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警开始时间"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 156
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警结束时间"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 174
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警总结"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 385
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警详情"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 705
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警值大小"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 98
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警状态"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 91
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "告警标签"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 854
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
+        "h": 12,
         "w": 24,
         "x": 0,
         "y": 9
       },
+      "hoverEnabled": true,
       "id": 2,
-      "options": {
-        "showHeader": true,
-        "sortBy": []
-      },
+      "infoEnabled": true,
+      "lengthChangeEnabled": true,
+      "orderColumnEnabled": true,
+      "pagingTypes": [
+        {
+          "$$hashKey": "object:104",
+          "text": "Page number buttons only",
+          "value": "numbers"
+        },
+        {
+          "$$hashKey": "object:105",
+          "text": "'Previous' and 'Next' buttons only",
+          "value": "simple"
+        },
+        {
+          "$$hashKey": "object:106",
+          "text": "'Previous' and 'Next' buttons, plus page numbers",
+          "value": "simple_numbers"
+        },
+        {
+          "$$hashKey": "object:107",
+          "text": "'First', 'Previous', 'Next' and 'Last' buttons",
+          "value": "full"
+        },
+        {
+          "$$hashKey": "object:108",
+          "text": "'First', 'Previous', 'Next' and 'Last' buttons, plus page numbers",
+          "value": "full_numbers"
+        },
+        {
+          "$$hashKey": "object:109",
+          "text": "'First' and 'Last' buttons, plus page numbers",
+          "value": "first_last_numbers"
+        }
+      ],
+      "panelHeight": 398,
       "pluginVersion": "8.2.0",
+      "rowNumbersEnabled": false,
+      "rowsPerPage": 5,
+      "scroll": false,
+      "scrollHeight": "default",
+      "searchEnabled": true,
+      "searchHighlightingEnabled": true,
+      "showCellBorders": false,
+      "showHeader": true,
+      "showRowBorders": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "sortByColumns": [
+        {
+          "$$hashKey": "object:42",
+          "columnData": 0,
+          "sortMethod": "desc"
+        }
+      ],
+      "sortByColumnsData": [
+        [
+          5,
+          "asc"
+        ]
+      ],
+      "stripedRowsEnabled": true,
+      "styles": [
+        {
+          "$$hashKey": "object:44",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "date"
+        },
+        {
+          "$$hashKey": "object:45",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "splitPattern": "/ /",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  startsAt AS \"告警开始时间\",\n  summary as \"告警概述\",\n  labels as '告警标签',\n  description as \"告警详情\",\n  valuess as \"告警值大小\",\n  JSON_EXTRACT(statusss, \"$.state\") as '告警状态',\n  endsAt as \"告警结束时间\"\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and (labels not like '%测试环境%')\n  and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\nORDER BY startsAt desc",
+          "rawSql": "SELECT\n  startsAt AS \"告警开始时间\",\n  JSON_EXTRACT(labels, \"$.severity\") as '告警级别',\n  JSON_EXTRACT(labels, \"$.alertname\") as '告警名称',\n  description as \"告警详情\",\n  valuess as \"告警值大小\",\n  JSON_EXTRACT(statusss, \"$.state\") as '告警状态',\n  endsAt as \"告警结束时间\"\nFROM alertmanager\nWHERE\n  $__timeFilter(startsAt)\n  and JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and env='$ENV'  \nORDER BY startsAt desc",
           "refId": "A",
           "select": [
             [
@@ -1977,11 +2736,45 @@
           ]
         }
       ],
+      "themeOptions": {
+        "dark": "./styles/dark.scss",
+        "light": "./styles/light.scss"
+      },
+      "themes": [
+        {
+          "$$hashKey": "object:79",
+          "disabled": false,
+          "text": "Basic",
+          "value": "basic_theme"
+        },
+        {
+          "$$hashKey": "object:80",
+          "disabled": true,
+          "text": "Bootstrap",
+          "value": "bootstrap_theme"
+        },
+        {
+          "$$hashKey": "object:81",
+          "disabled": true,
+          "text": "Foundation",
+          "value": "foundation_theme"
+        },
+        {
+          "$$hashKey": "object:82",
+          "disabled": true,
+          "text": "ThemeRoller",
+          "value": "themeroller_theme"
+        }
+      ],
       "title": "告警详情列表",
-      "type": "table"
+      "transform": "table",
+      "type": "briangann-datatable-panel"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2002,9 +2795,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
+        "w": 6,
         "x": 0,
-        "y": 20
+        "y": 21
       },
       "id": 21,
       "options": {
@@ -2022,14 +2815,18 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n  startsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s') \n  and  labels not like '%测试环境%' \n  and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n;\n",
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere\nstartsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s') \nand  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and env='$ENV'  \n;\n",
           "refId": "A",
           "select": [
             [
@@ -2055,7 +2852,10 @@
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2076,9 +2876,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 8,
-        "y": 20
+        "w": 6,
+        "x": 6,
+        "y": 21
       },
       "id": 22,
       "options": {
@@ -2096,14 +2896,18 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere\n  lower(labels) like '%critical%'\n  AND startsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s') \n  and  labels not like '%测试环境%' \n  and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n ;\n",
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere\n JSON_EXTRACT(lower(labels), lower(\"$.severity\"))='critical'\n and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \nAND startsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s')  \n  and env='$ENV'  \n;\n",
           "refId": "A",
           "select": [
             [
@@ -2129,7 +2933,10 @@
       "type": "stat"
     },
     {
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2150,9 +2957,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 16,
-        "y": 20
+        "w": 6,
+        "x": 12,
+        "y": 21
       },
       "id": 23,
       "options": {
@@ -2170,14 +2977,18 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "table",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere\n LOWER(labels) like '%warning%'\n AND startsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s') \n  and  labels not like '%测试环境%' \n  and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n  ;\n",
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n JSON_EXTRACT(lower(labels), lower(\"$.severity\"))='warning'\n and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n AND startsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s')   \n  and env='$ENV'  \n ;\n",
           "refId": "A",
           "select": [
             [
@@ -2203,11 +3014,95 @@
       "type": "stat"
     },
     {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "light-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 21
+      },
+      "id": 37,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n JSON_EXTRACT(lower(labels), lower(\"$.severity\"))='info'\n and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n AND startsAt > str_to_date(DATE_FORMAT(NOW(),'%Y-%m-%d'),'%Y-%m-%d %H:%i:%s')   \n  and env='$ENV'  \n ;\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "今日Info告警",
+      "type": "stat"
+    },
+    {
       "aliasColors": {},
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "MySQL-LOCALHOST",
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short"
@@ -2220,7 +3115,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 25
       },
       "hiddenSeries": false,
       "id": 26,
@@ -2244,7 +3139,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.2.0",
+      "pluginVersion": "9.0.0",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2254,11 +3149,15 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroup(startsAt,'1h',0) as 'time',\n  count(fingerprint) as 'value'\nFROM alertmanager\nwhere $__timeFilter(startsAt)\n and labels not like '%测试环境%'\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\ngroup by time;\n",
+          "rawSql": "SELECT\n  $__timeGroup(startsAt,'1h',0) as 'time',\n  count(fingerprint) as 'value'\nFROM alertmanager\nwhere $__timeFilter(startsAt)\nand  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and env='$ENV'  \ngroup by time;\n",
           "refId": "A",
           "select": [
             [
@@ -2293,9 +3192,7 @@
           "yaxis": "left"
         }
       ],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "告警走势图(小时)",
       "tooltip": {
         "shared": true,
@@ -2304,9 +3201,7 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
@@ -2314,286 +3209,427 @@
         {
           "$$hashKey": "object:116",
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "$$hashKey": "object:117",
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
-      "collapsed": true,
-      "datasource": null,
+      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "h2rtSbDnz"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 34
       },
       "id": 33,
-      "panels": [
-        {
-          "datasource": "MySQL-LOCALHOST",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "dark-green",
-                    "value": null
-                  },
-                  {
-                    "color": "dark-purple",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 4,
-            "x": 0,
-            "y": 34
-          },
-          "id": 4,
-          "options": {
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.0",
-          "targets": [
-            {
-              "format": "table",
-              "group": [],
-              "metricColumn": "none",
-              "rawQuery": true,
-              "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere   (labels not like '%测试环境%')\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts';",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "timeColumn": "time",
-              "where": [
-                {
-                  "name": "$__timeFilter",
-                  "params": [],
-                  "type": "macro"
-                }
-              ]
-            }
-          ],
-          "title": "历史告警总数(FROM:2021-12-02)",
-          "type": "stat"
-        },
-        {
-          "datasource": "MySQL-LOCALHOST",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "dark-green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 4,
-            "x": 4,
-            "y": 34
-          },
-          "id": 18,
-          "options": {
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.0",
-          "targets": [
-            {
-              "format": "table",
-              "group": [],
-              "metricColumn": "none",
-              "rawQuery": true,
-              "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n lower(labels) like '%critical%' \n and  (labels not like '%测试环境%')\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts'\n;",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "timeColumn": "time",
-              "where": [
-                {
-                  "name": "$__timeFilter",
-                  "params": [],
-                  "type": "macro"
-                }
-              ]
-            }
-          ],
-          "title": "Critical告警总数(FROM:2021-12-02)",
-          "type": "stat"
-        },
-        {
-          "datasource": "MySQL-LOCALHOST",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "dark-green",
-                    "value": null
-                  },
-                  {
-                    "color": "super-light-orange",
-                    "value": 1
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 5,
-            "w": 4,
-            "x": 8,
-            "y": 34
-          },
-          "id": 19,
-          "options": {
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.2.0",
-          "targets": [
-            {
-              "format": "table",
-              "group": [],
-              "metricColumn": "none",
-              "rawQuery": true,
-              "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n lower(labels) like '%warning%' \n and (labels not like '%测试环境%')\n and alertmanager_api_url <> 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts';",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "timeColumn": "time",
-              "where": [
-                {
-                  "name": "$__timeFilter",
-                  "params": [],
-                  "type": "macro"
-                }
-              ]
-            }
-          ],
-          "title": "Warning告警总数(FROM:2021-12-02)",
-          "type": "stat"
-        }
-      ],
+      "panels": [],
       "title": "历史告警",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green"
+              },
+              {
+                "color": "dark-purple",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 35
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere  \n   env='$ENV'  \n  and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n;",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "历史告警总数(FROM:2024-10-09)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red"
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 35
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere  \n JSON_EXTRACT(lower(labels), lower(\"$.severity\"))='critical' \n and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n    and env='$ENV'  \n\n;",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Critical告警总数(FROM:2024-10-09)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-green"
+              },
+              {
+                "color": "super-light-orange",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 35
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n JSON_EXTRACT(lower(labels), lower(\"$.severity\"))='warning' \n  and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and env='$ENV'  \n;",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Warning告警总数(FROM:2024-10-09)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "${DS_MYSQL-LOCALHOST}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "light-blue"
+              },
+              {
+                "color": "light-blue",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 35
+      },
+      "id": 38,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "${DS_MYSQL-LOCALHOST}"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  count(fingerprint)\nFROM alertmanager\nwhere \n JSON_EXTRACT(lower(labels), lower(\"$.severity\"))='info'\n  and  JSON_EXTRACT(statusss, \"$.silencedBy[0]\") is null \n  and env='$ENV'  \n;",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "Info告警总数(FROM:2024-10-09)",
+      "type": "stat"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 31,
+  "schemaVersion": 36,
   "style": "dark",
   "tags": [
     "alertmanager",
     "prometheus"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "com",
+          "value": "com"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "环境",
+        "multi": false,
+        "name": "ENV",
+        "options": [
+          {
+            "selected": true,
+            "text": "com",
+            "value": "com"
+          },
+          {
+            "selected": false,
+            "text": "cn",
+            "value": "cn"
+          },
+          {
+            "selected": false,
+            "text": "me",
+            "value": "me"
+          },
+          {
+            "selected": false,
+            "text": "priv",
+            "value": "priv"
+          },
+          {
+            "selected": false,
+            "text": "ops",
+            "value": "ops"
+          }
+        ],
+        "query": "com,cn,me,priv,ops",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
     "from": "now-24h",
@@ -2615,7 +3651,8 @@
     ]
   },
   "timezone": "",
-  "title": "告警看板",
-  "uid": "E0nung27k",
-  "version": 70
+  "title": "1.公有云-告警看板",
+  "uid": "E0nung27kcscaasaccom",
+  "version": 90,
+  "weekStart": ""
 }

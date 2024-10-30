@@ -9,11 +9,7 @@ from threading import Timer
 # 启动服务
 host = ('localhost', 8888)
 
-<<<<<<< HEAD
 alertmanager_api_url_list = ['https://alertmanager.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-com.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-cn.qiyuesuo.cn/api/v2/alerts', 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts']
-=======
-alertmanager_api_url_list = ['https://alertmanager.qiyuesuo.com/api/v2/alerts', 'https://alertmanager-cn.qiyuesuo.cn/api/v2/alerts', 'https://alertmanager-me.qiyuesuo.me/api/v2/alerts']
->>>>>>> 8565cf4f958f5243b172239ba77a50763954c1b2
 
 class DbManager(object):
     def __init__(self, host, port, db_name, user_name, password):
@@ -77,6 +73,7 @@ def query_uniq_alert(ss, fp, url):
         ifuniq = True
     else:
         ifuniq = False
+    # print("1:" + str(ifuniq))
     return ifuniq
 
 class Resquest(BaseHTTPRequestHandler):
@@ -92,7 +89,6 @@ class Resquest(BaseHTTPRequestHandler):
         # logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         endtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         for alertmanager_api_url in alertmanager_api_url_list:
-            old_list_bb = Resquest.alert_old_list(url=alertmanager_api_url)
             alert_new_list = []
             old_list_bb = Resquest.alert_old_list(url=alertmanager_api_url)
             req = requests.get(url=alertmanager_api_url)
@@ -101,7 +97,6 @@ class Resquest(BaseHTTPRequestHandler):
                 for i in range(len(data)):
                     metrics_data = data[i]
                     receivers = metrics_data['receivers'][0]['name']
-<<<<<<< HEAD
                     if receivers != "Watchdog":
                         if metrics_data['status']['state'] == 'active':
                             description = metrics_data['annotations'].get('description', '')
@@ -117,33 +112,143 @@ class Resquest(BaseHTTPRequestHandler):
                             updatedAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(updatedAt, "%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
                             generatorURL = metrics_data['generatorURL']
                             labels = json.dumps(metrics_data['labels'])
+                            if alertmanager_api_url == "https://alertmanager-com.qiyuesuo.com/api/v2/alerts":
+                                env = "com"
+                                namespace = metrics_data['labels'].get('namespace', '')
+                                if namespace == 'qiyuesuo-a' or namespace == 'ingress-nginx-a':
+                                    area = 'a'
+                                elif namespace == 'qiyuesuo-b' or namespace == 'ingress-nginx-b':
+                                    area = 'b'
+                                else:
+                                    area = 'other'
+                            elif alertmanager_api_url == "https://alertmanager-cn.qiyuesuo.cn/api/v2/alerts":
+                                env = "cn"
+                                namespace = metrics_data['labels'].get('namespace', '')
+                                if namespace == 'qiyuesuo-a' or namespace == 'ingress-nginx-a':
+                                    area = 'a'
+                                elif namespace == 'qiyuesuo-b' or namespace == 'ingress-nginx-b':
+                                    area = 'b'
+                                else:
+                                    area = 'other'
+                            elif alertmanager_api_url == "https://alertmanager-me.qiyuesuo.me/api/v2/alerts":
+                                env = "me"
+                                namespace = metrics_data['labels'].get('namespace', '')
+                                if namespace == 'qiyuesuo':
+                                    area = 'a'
+                                else:
+                                    area = 'other'
+                            else:
+                                env = metrics_data['labels'].get('exported_env') or metrics_data['labels'].get('env', 'ops')
+                                area = (metrics_data['labels'].get('qys_area') or metrics_data['labels'].get('exported_area') or metrics_data['labels'].get('area', 'other')).lower()
+
+                            # 处理数据库
+                            if 'MysqlSlowQueries' in metrics_data['labels'].get('alertname', '') or '数据库 慢' in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库慢查询"
+                            elif 'MysqlTooManyConnections' in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库连接数高"
+                            elif '数据库 行锁等待' in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库行锁"
+                            elif '数据库 内存'  in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库内存高"
+                            elif '数据库 CPU'  in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库CPU高"
+                            elif '数据库 磁盘'  in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库磁盘高"
+                            elif 'MysqlSlave'  in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库从库"
+                            elif 'MysqlRestarted' in metrics_data['labels'].get('alertname', '') or 'MysqlDown' in metrics_data['labels'].get('alertname', ''):
+                                category = "数据库宕机"
+                            # 处理redis
+                            elif 'Redis 流控' in metrics_data['labels'].get('alertname', ''):
+                                category = "Redis超流控"
+                            elif 'Redis 带宽' in metrics_data['labels'].get('alertname', ''):
+                                category = "Redis带宽高"
+                            elif 'Redis CPU' in metrics_data['labels'].get('alertname', ''):
+                                category = "RedisCPU高"
+                            elif 'Redis 内存' in metrics_data['labels'].get('alertname', ''):
+                                category = "Redis内存高"
+                            # 处理nginx
+                            elif 'Too Many Nginx Writing' in metrics_data['labels'].get('alertname', ''):
+                                category = "nginx慢"
+                            elif '5xx' in metrics_data['labels'].get('alertname', ''):
+                                category = "nginx5xx"
+                            elif '4xx' in metrics_data['labels'].get('alertname', ''):
+                                category = "nginx4xx"
+                            # 处理java
+                            elif 'heap space' in metrics_data['labels'].get('alertname', '') or 'old space' in metrics_data['labels'].get('alertname', ''):
+                                category = "java内存高"
+                            elif 'gc' in metrics_data['labels'].get('alertname', ''):
+                                category = "javaFGC"
+                            elif 'JDBCPool' in metrics_data['labels'].get('alertname', ''):
+                                category = "java连接高/等待"
+                            elif 'jvm down' in metrics_data['labels'].get('alertname', ''):
+                                category = "java服务宕机"
+                            # 处理应用
+                            elif 'Pod cpu limits more than 98%' in metrics_data['labels'].get('alertname', ''):
+                                category = "应用CPU高"
+                            elif 'Pod memory limits more than 98%' in metrics_data['labels'].get('alertname', ''):
+                                category = "应用内存高"
+                            elif 'threads' in metrics_data['labels'].get('alertname', ''):
+                                category = "应用线程忙"
+                            # 处理mq
+                            elif '非delay类型队列' in metrics_data['labels'].get('alertname', ''):
+                                category = "MQ非delay队列"
+                            elif '是delay类型队列' in metrics_data['labels'].get('alertname', ''):
+                                category = "MQdelay队列"
+                            elif 'MQ服务宕机' in metrics_data['labels'].get('alertname', '') or 'RabbitmqNodeNotDistributed' in metrics_data['labels'].get('alertname', '') or 'RabbitmqNodeDown' in metrics_data['labels'].get('alertname', ''):
+                                category = "MQ宕机"
+                            elif 'RabbitmqOutOfMemory' in metrics_data['labels'].get('alertname', '') or 'RabbitmqMemoryHigh' in metrics_data['labels'].get('alertname', ''):
+                                category = "MQ内存高"
+                            elif 'RabbitmqTooManyConnections' in metrics_data['labels'].get('alertname', ''):
+                                category = "MQ连接数高"
+                            elif 'RabbitmqDiskFreeAlarm' in metrics_data['labels'].get('alertname', ''):
+                                category = "MQ磁盘高"
+                            # 处理URL探针
+                            elif 'BlackboxSlow' in metrics_data['labels'].get('alertname', ''):
+                                category = "URL慢"
+                            elif 'BlackboxProbeHttpFailure' in metrics_data['labels'].get('alertname', ''):
+                                category = "URL故障"
+                            elif 'BlackboxSsl' in metrics_data['labels'].get('alertname', ''):
+                                category = "URLSSL证书"
+                            # 处理zookeeper
+                            elif 'ZookeeperDown' in metrics_data['labels'].get('alertname', '') or 'ZookeeperNotOk' in metrics_data['labels'].get('alertname', ''):
+                                category = "ZK宕机"
+                            elif 'ZookeeperMissingLeader' in metrics_data['labels'].get('alertname', '') or 'ZookeeperTooManyLeaders' in metrics_data['labels'].get('alertname', ''):
+                                category = "ZKLeader异常"
+                            elif 'Zookeeper堆积' in metrics_data['labels'].get('alertname', '') or 'Zookeeper阻塞' in metrics_data['labels'].get('alertname', '') or 'Zookeeper平均响应' in metrics_data['labels'].get('alertname', '') or 'Zookeeper打开文件' in metrics_data['labels'].get('alertname', ''):
+                                category = "ZK慢"
+                            # 处理obs
+                            elif 'OBS存储' in metrics_data['labels'].get('alertname', ''):
+                                category = "OBS成功率"
+                            elif 'OBS-GET类请求' in metrics_data['labels'].get('alertname', ''):
+                                category = "OBS延迟高"
+                            # 处理elb
+                            elif metrics_data['labels'].get('alertname', '').startswith('ELB '):
+                                category = "ELB"
+                            # 处理kafka
+                            elif metrics_data['labels'].get('alertname', '').startswith('kafka'):
+                                category = "KAFKA"
+                            # 处理ES
+                            elif metrics_data['labels'].get('alertname', '').startswith('ES '):
+                                category = "ES"
+                            # 处理k8s
+                            elif metrics_data['labels'].get('alertname', '').startswith('Prometheus') or metrics_data['labels'].get('alertname', '').startswith('Kube') or metrics_data['labels'].get('alertname', '').startswith('Node'):
+                                category = "K8S"
+                            # 一律其他
+                            else:
+                                category = "其他"
                             bb = str(startsAt) + str(fingerprint)
                             alert_new_list.append(bb)
                             ifuniq = Resquest.alert_uniq_result(ss=startsAt, fp=fingerprint, url=alertmanager_api_url)
+                            # print("2:" + str(ifuniq))
                             if ifuniq == False:
                                 sql_arg = (
                                 alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt,
-                                receivers, updatedAt, statusss, generatorURL, labels)
-                                insert_sql = "INSERT INTO alertmanager (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels) VALUES " + str(sql_arg) + ";"
+                                receivers, updatedAt, statusss, generatorURL, labels, env, area, category)
+                                insert_sql = "INSERT INTO alertmanager (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels, env, area, category) VALUES " + str(sql_arg) + ";"
                                 sqlDMl(insert_sql, db)
                             else:
                                 continue
-=======
-                    statusss = json.dumps(metrics_data['status'])
-                    updatedAt = metrics_data['updatedAt'].replace('T', ' ').replace('Z', ' ')[0:19]
-                    updatedAt = (datetime.datetime.fromtimestamp(int(time.mktime(time.strptime(updatedAt, "%Y-%m-%d %H:%M:%S")))) + datetime.timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
-                    generatorURL = metrics_data['generatorURL']
-                    labels = json.dumps(metrics_data['labels'])
-                    bb = str(startsAt) + str(fingerprint)
-                    alert_new_list.append(bb)
-                    if receivers == "Watchdog":
-                        continue
-                    else:
-                        if bb not in old_list_bb:
-                            sql_arg = (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels)
-                            insert_sql = "INSERT INTO alertmanager (alertmanager_api_url, description, summary, valuess, fingerprint, startsAt, endsAt, receivers, updatedAt, statusss, generatorURL, labels) VALUES " + str(sql_arg) +";"
-                            sqlDMl(insert_sql, db)
->>>>>>> 8565cf4f958f5243b172239ba77a50763954c1b2
             ##### 修正恢复时间
             resolved_list = list(set(old_list_bb).difference(set(alert_new_list)))
             if len(resolved_list) > 0:
@@ -207,8 +312,4 @@ if __name__ == '__main__':
     p2.start()
     p1.join()
     p2.join()
-<<<<<<< HEAD
 #    p2.terminate()
-=======
-#    p2.terminate()
->>>>>>> 8565cf4f958f5243b172239ba77a50763954c1b2
